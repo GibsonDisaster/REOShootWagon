@@ -2,3 +2,13 @@
 First Commit:
 Enemies will come at you infinitely.
 —————————————
+update 1:
+changed player sprite.
+added gun flash
+added background
+changed enemy sprite
+added enemy variants
+added Shop Screen
+added player health bar
+added health and damage to the shop
+—————————————
