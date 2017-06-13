@@ -3,19 +3,31 @@ package entities;
 import java.awt.Rectangle;
 
 public class Enemy {
-	private int x, y, width, height, health, variant;
+	private int x, y, width, height, health, variant, speed;
 
 	public Enemy(int x, int y, int width, int height) {
 		this.x = x;
 		this.y = y;
 		this.width = width;
 		this.height = height;
-		this.health = 20;
 		this.variant = (int) (Math.random() * 3); // 0 - 3
+		
+		if (this.variant == 0) { //Biker
+			this.health = 40;
+			this.speed = 4;
+		}
+		if (this.variant == 1) { //teal
+			this.health = 30;
+			this.speed = 3;
+		} 
+		if (this.variant == 2){ //purple
+			this.health = 20;
+			this.speed = 2;
+		}
 	}
 	
 	public void move() {
-		this.x += 2;
+		this.x += this.speed;
 	}
 	
 	//Getters and Setters

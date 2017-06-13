@@ -12,7 +12,7 @@ public class Bullet {
 		this.height = 10;
 		this.xDir = mx-x;
 		this.yDir = my-y;
-		this.dmg = 5;
+		this.dmg = 10;
 	}
 	
 	public void update() {

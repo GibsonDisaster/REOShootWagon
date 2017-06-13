@@ -12,3 +12,7 @@ added Shop Screen
 added player health bar
 added health and damage to the shop
 —————————————
+update 2:
+added First boss at wave 10
+enemy speed depends on variant now
+—————————————

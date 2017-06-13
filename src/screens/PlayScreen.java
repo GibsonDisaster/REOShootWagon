@@ -13,20 +13,24 @@ import org.newdawn.slick.SlickException;
 import org.newdawn.slick.state.BasicGameState;
 import org.newdawn.slick.state.StateBasedGame;
 
+import entities.Boss;
 import entities.Bullet;
 import entities.Enemy;
 import entities.Player;
+import entities.Rock;
 import entities.Wall;
 
 public class PlayScreen extends BasicGameState {
 	
 	public static Player player;
 	public ArrayList<Bullet> bullets;
+	public ArrayList<Rock> rocks;
 	public ArrayList<Enemy> enemies;
 	public ArrayList<Wall> walls;
+	public ArrayList<Boss> bosses;
 	private int level, alive, shopX, shopY;
 	private int enemyCount;
-	private Image player_img, outterWall, innerWall, biker, zombie1, zombie2, nextWaveInput, gun_img, gun_firing_img, cursor_img, current_gun_img, background, shopScreenButton;
+	private Image player_img, outterWall, innerWall, biker, zombie1, zombie2, nextWaveInput, gun_img, gun_firing_img, cursor_img, current_gun_img, background, shopScreenButton, iggy_img, rock_img;
 	private boolean wait_for_input;
 	private Rectangle shopRect;
 	
@@ -35,6 +39,8 @@ public class PlayScreen extends BasicGameState {
 		bullets = new ArrayList<>();
 		enemies = new ArrayList<>();
 		walls = new ArrayList<>();
+		bosses = new ArrayList<>();
+		rocks = new ArrayList<>();
 		level = 0;
 		shopX = 1200;
 		shopY = 640;
@@ -58,6 +64,8 @@ public class PlayScreen extends BasicGameState {
 		cursor_img = new Image("res/cursor.png");
 		background = new Image("res/background.png");
 		shopScreenButton = new Image("res/shopScreenButton.png");
+		iggy_img = new Image("res/iggy.png");
+		rock_img = new Image("res/rock.png");
 	}
 
 	@Override
@@ -97,6 +105,16 @@ public class PlayScreen extends BasicGameState {
 			}
 		}
 		
+		for (Boss b : bosses) {
+			if (b.getVariant() == "Iggy" && b.getHealth() > 0)
+				iggy_img.draw(b.getX(), b.getY(), b.getWidth(), b.getHeight());
+		}
+		
+		for (Rock r : rocks) {
+			if (r.getHealth() > 0)
+				rock_img.draw(r.getX(), r.getY());
+		}
+		
 		if (wait_for_input) {
 			nextWaveInput.draw(0, 0);
 			shopScreenButton.draw(1200, 640);
@@ -110,11 +128,13 @@ public class PlayScreen extends BasicGameState {
 	@Override
 	public void update(GameContainer gc, StateBasedGame sbg, int delta) throws SlickException {
 		Input input = gc.getInput();
-		gc.setMouseCursor(cursor_img, 0, 0);
+		gc.setMouseCursor(cursor_img, 16, 16);
 		
 		if (input.isMousePressed(input.MOUSE_LEFT_BUTTON)) {
-			bullets.add(new Bullet(input.getMouseX(), input.getMouseY(), player.getX(), player.getY()));
-			current_gun_img = gun_firing_img;
+			if (input.getMouseX() < player.getX()-80) {
+				bullets.add(new Bullet(input.getMouseX(), input.getMouseY(), player.getX(), player.getY()));
+				current_gun_img = gun_firing_img;
+			}
 			if ( (new Rectangle(Mouse.getX(), 720-Mouse.getY(), 80, 80).intersects(shopRect) ) && wait_for_input)
 				sbg.enterState(2);
 		} else {
@@ -148,7 +168,9 @@ public class PlayScreen extends BasicGameState {
 		for (Enemy e : enemies) {
 			if (e.getHealth() > 0) 
 				e.move();
-			
+		}
+		
+		for (Enemy e : enemies) {
 			if ((new Rectangle(1016, 257, 24, 462)).intersects(e.bounds()) && e.getHealth() > 0) {
 				e.takeDamage(100);
 				player.takeDamage(10);
@@ -157,18 +179,61 @@ public class PlayScreen extends BasicGameState {
 				if (checkBounds(b, e) && e.getHealth() > 0) {
 					e.takeDamage(b.getDmg()+player.getDmgBonus());
 					b.setX(100000);
-				} 
+				}
 			}
 		}
+		
+		for (Boss b : bosses) {
+			if (b.getHealth() > 0)
+				b.move();
+			if (b.isReady() && b.getHealth() > 0) {
+				int i = (int) (Math.random() * 150);
+				if (i == 5) {
+					rocks.add(new Rock(b.getX(), b.getY()));
+				}
+			}
+		}
+		
+		for (Boss b : bosses) {
+			for (Bullet l : bullets) {
+				if (b.bounds().intersects(l.bounds()) && b.getHealth() > 0) {
+					b.takeDamage(l.getDmg() + player.getDmgBonus());
+					l.setX(100000);
+				}
+			}
+		}
+		
+		for (Rock r : rocks) {
+			r.update();
+		}
+		
+		for (Rock r : rocks) {
+			if ((new Rectangle(1016, 257, 24, 462)).intersects(r.bounds()) && r.getHealth() > 0) {
+				r.takeDamage(100);
+				player.takeDamage(r.getDmg());
+			}
+			
+			for (Bullet b : bullets) {
+				if (r.bounds().intersects(b.bounds())) {
+					r.takeDamage(b.getDmg());
+					b.setX(10000);
+				}
+			}
+		}
+		
 	}
 	
 	public void nextLevel() {
 		this.level += 1;
 		player.giveMoney(this.enemyCount*5);
 		this.enemyCount = this.level + 2;
+		bosses.clear();
 		enemies.clear();
 		bullets.clear();
-		initEnemies();
+		if (level != 10)
+			initEnemies();
+		else
+			initBoss(level/10);
 		alive = getAlive();
 	}
 	
@@ -180,10 +245,19 @@ public class PlayScreen extends BasicGameState {
 		}
 	}
 	
+	public void initBoss(int num) {
+		if (num == 1)
+			bosses.add(new Boss(-200, 450, 160, 240, "Iggy"));
+	}
+	
 	public int getAlive() {
 		int h = 0;
 		for (Enemy e : enemies) {
 			if (e.getHealth() > 0)
+				h++;
+		}
+		for (Boss b : bosses) {
+			if (b.getHealth() > 0)
 				h++;
 		}
 		return h;
