@@ -24,13 +24,14 @@ public class PlayScreen extends BasicGameState {
 	
 	public static Player player;
 	public ArrayList<Bullet> bullets;
-	public ArrayList<Rock> rocks;
+	public ArrayList<Rock> projs;
 	public ArrayList<Enemy> enemies;
 	public ArrayList<Wall> walls;
 	public ArrayList<Boss> bosses;
 	private int level, alive, shopX, shopY;
 	private int enemyCount;
-	private Image player_img, outterWall, innerWall, biker, zombie1, zombie2, nextWaveInput, gun_img, gun_firing_img, cursor_img, current_gun_img, background, shopScreenButton, iggy_img, rock_img;
+	private Image player_img, outterWall, innerWall, biker, zombie1, zombie2, nextWaveInput, gun_img, gun_firing_img, cursor_img, 
+				  current_gun_img, background, shopScreenButton, iggy_img, ozzy_img, rock_img, elise_img, dove_img;
 	private boolean wait_for_input;
 	private Rectangle shopRect;
 	
@@ -40,7 +41,7 @@ public class PlayScreen extends BasicGameState {
 		enemies = new ArrayList<>();
 		walls = new ArrayList<>();
 		bosses = new ArrayList<>();
-		rocks = new ArrayList<>();
+		projs = new ArrayList<>();
 		level = 0;
 		shopX = 1200;
 		shopY = 640;
@@ -66,6 +67,9 @@ public class PlayScreen extends BasicGameState {
 		shopScreenButton = new Image("res/shopScreenButton.png");
 		iggy_img = new Image("res/iggy.png");
 		rock_img = new Image("res/rock.png");
+		elise_img = new Image("res/elise.png");
+		ozzy_img = new Image("res/Ozzy.png");
+		dove_img = new Image("res/dove.png");
 	}
 
 	@Override
@@ -77,12 +81,26 @@ public class PlayScreen extends BasicGameState {
 		outterWall.draw(1016, 257, 24, 462);
 		innerWall.draw(1040, 312, 240, 407);
 		
+		for (Boss b : bosses) {
+			if (b.getVariant() == "Iggy" && b.getHealth() > 0)
+				iggy_img.draw(b.getX(), b.getY(), b.getWidth(), b.getHeight());
+			if (b.getVariant() == "Ozzy" && b.getHealth() > 0)
+				ozzy_img.draw(b.getX(), b.getY());
+		}
+		
 		g.setColor(Color.green);
 		g.fillRect(0, 690, 1280, 400);
 		
 		g.setColor(Color.red);
 		g.fillRect(440, 40, 2*player.getHealth(), 40);
 		g.drawRect(440, 40, 200, 40);
+		
+		for (Boss b : bosses) {
+			g.fillRect(440, 670, 2*b.getHealth(), 40);
+			g.drawRect(440, 670, 2*b.getHealth(), 40);
+			g.setColor(Color.black);
+			g.drawString(b.getVariant(), 440, 670);
+		}
 		
 		g.setColor(Color.black);
 		g.drawString("Health: ", 490, 20);
@@ -100,19 +118,20 @@ public class PlayScreen extends BasicGameState {
 					zombie1.draw(e.getX(), e.getY(), e.getWidth(), e.getHeight());
 				else if (e.getVariant() == 2)
 					zombie2.draw(e.getX(), e.getY(), e.getWidth(), e.getHeight());
+				else if (e.getVariant() == 3)
+					elise_img.draw(e.getX(), e.getY(), e.getWidth(), e.getHeight());
 				else
 					zombie1.draw(e.getX(), e.getY(), e.getWidth(), e.getHeight());
 			}
 		}
 		
-		for (Boss b : bosses) {
-			if (b.getVariant() == "Iggy" && b.getHealth() > 0)
-				iggy_img.draw(b.getX(), b.getY(), b.getWidth(), b.getHeight());
-		}
-		
-		for (Rock r : rocks) {
-			if (r.getHealth() > 0)
-				rock_img.draw(r.getX(), r.getY());
+		for (Rock r : projs) {
+			if (r.getHealth() > 0) {
+				if (r.getVariant() == "Rock")
+					rock_img.draw(r.getX(), r.getY());
+				else if (r.getVariant() == "Dove")
+					dove_img.draw(r.getX(), r.getY());
+			}
 		}
 		
 		if (wait_for_input) {
@@ -186,28 +205,34 @@ public class PlayScreen extends BasicGameState {
 		for (Boss b : bosses) {
 			if (b.getHealth() > 0)
 				b.move();
-			if (b.isReady() && b.getHealth() > 0) {
+			if (b.isReady() && b.getHealth() > 0 && b.getVariant() == "Iggy") {
 				int i = (int) (Math.random() * 150);
 				if (i == 5) {
-					rocks.add(new Rock(b.getX(), b.getY()));
+					projs.add(new Rock(b.getX(), b.getY(), "Rock"));
+				}
+			}
+			if (b.isReady() && b.getHealth() > 0 && b.getVariant() == "Ozzy") {
+				int i = (int) (Math.random() * 100);
+				if (i == 5) {
+					projs.add(new Rock(b.getX(), b.getY(), "Dove"));
 				}
 			}
 		}
 		
 		for (Boss b : bosses) {
 			for (Bullet l : bullets) {
-				if (b.bounds().intersects(l.bounds()) && b.getHealth() > 0) {
+				if (b.bounds().intersects(l.bounds()) && b.getHealth() > 0 && b.isReady()) {
 					b.takeDamage(l.getDmg() + player.getDmgBonus());
 					l.setX(100000);
 				}
 			}
 		}
 		
-		for (Rock r : rocks) {
+		for (Rock r : projs) {
 			r.update();
 		}
 		
-		for (Rock r : rocks) {
+		for (Rock r : projs) {
 			if ((new Rectangle(1016, 257, 24, 462)).intersects(r.bounds()) && r.getHealth() > 0) {
 				r.takeDamage(100);
 				player.takeDamage(r.getDmg());
@@ -225,15 +250,17 @@ public class PlayScreen extends BasicGameState {
 	
 	public void nextLevel() {
 		this.level += 1;
-		player.giveMoney(this.enemyCount*5);
+		player.giveMoney(this.enemyCount*5 + (bosses.size() * 100));
 		this.enemyCount = this.level + 2;
 		bosses.clear();
 		enemies.clear();
 		bullets.clear();
-		if (level != 10)
-			initEnemies();
-		else
+		if (level == 10)
 			initBoss(level/10);
+		else if (level == 20)
+			initBoss(level/10);
+		else
+			initEnemies();
 		alive = getAlive();
 	}
 	
@@ -248,6 +275,8 @@ public class PlayScreen extends BasicGameState {
 	public void initBoss(int num) {
 		if (num == 1)
 			bosses.add(new Boss(-200, 450, 160, 240, "Iggy"));
+		if (num == 2)
+			bosses.add(new Boss(-200, 450, 160, 240, "Ozzy"));
 	}
 	
 	public int getAlive() {

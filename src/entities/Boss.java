@@ -24,7 +24,7 @@ public class Boss {
 		} 
 		if (this.variant == "Cher"){
 			this.health = 300;
-			this.speed = 2;
+			this.speed = 4;
 		}
 	}
 	

@@ -4,8 +4,10 @@ import java.awt.Rectangle;
 
 public class Rock {
 	private int x, y, width, height, health, yDir, dmg;
+	private String variant;
 
-	public Rock(int x, int y) {
+	public Rock(int x, int y, String var) {
+		this.variant = var;
 		this.x = x-80;
 		this.y = y + 80;
 		this.width = 100;
@@ -23,6 +25,18 @@ public class Rock {
 		return this.health;
 	}
 	
+	public String getVariant() {
+		return variant;
+	}
+
+	public void setVariant(String variant) {
+		this.variant = variant;
+	}
+
+	public void setHealth(int health) {
+		this.health = health;
+	}
+
 	public Rectangle bounds() {
 		return new Rectangle(this.x, this.y, this.width, this.height);
 	}

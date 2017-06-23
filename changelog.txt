@@ -16,3 +16,10 @@ update 2:
 added First boss at wave 10
 enemy speed depends on variant now
 —————————————
+update 3:
+added Elise enemy
+-She does a speedy zoom
+added second boss
+--can longer hit bosses until they stop moving
+--you now get a money bonus from killing bosses
+—————————————

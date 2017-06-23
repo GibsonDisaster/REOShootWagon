@@ -10,7 +10,7 @@ public class Enemy {
 		this.y = y;
 		this.width = width;
 		this.height = height;
-		this.variant = (int) (Math.random() * 3); // 0 - 3
+		this.variant = (int) (Math.random() * 4); // 0 - 3
 		
 		if (this.variant == 0) { //Biker
 			this.health = 40;
@@ -20,9 +20,13 @@ public class Enemy {
 			this.health = 30;
 			this.speed = 3;
 		} 
-		if (this.variant == 2){ //purple
+		if (this.variant == 2) { //purple
 			this.health = 20;
 			this.speed = 2;
+		}
+		if (this.variant == 3) { //elise
+			this.health = 30;
+			this.speed = 6;
 		}
 	}
 	
